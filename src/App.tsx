@@ -11,6 +11,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AuthPage } from './components/auth/AuthPage';
 import { WinningAnimation } from './components/WinningAnimation';
 import { CompletedEventsSection } from './components/CompletedEventsSection';
+import { Leaderboard } from './components/Leaderboard';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { getCurrentUser, onAuthStateChange, signOut, getUserProfile, createUserProfile } from './services/auth';
@@ -36,7 +37,7 @@ function AppContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'ending'>('newest');
-  const [currentView, setCurrentView] = useState<'events' | 'payments' | 'admin'>('events');
+  const [currentView, setCurrentView] = useState<'events' | 'payments' | 'leaderboard' | 'admin'>('events');
 
   // Tabs for events
   const [eventsTab, setEventsTab] = useState<'active' | 'completed'>('active');
@@ -48,9 +49,27 @@ function AppContent() {
     eventTitle: string;
     streak: number;
   } | null>(null);
-  const [pendingWins, setPendingWins] = useState<string[]>([]);
+
+  // Track shown wins using localStorage to persist across sessions
+  const [shownWins, setShownWins] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('shownWins');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   const categories = ['All', 'Weather', 'Cryptocurrency', 'Sports', 'Technology', 'Finance', 'Politics', 'Entertainment'];
+
+  // Save shown wins to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('shownWins', JSON.stringify(Array.from(shownWins)));
+    } catch (error) {
+      console.error('Failed to save shown wins to localStorage:', error);
+    }
+  }, [shownWins]);
 
   const handleUserProfile = async (user: any) => {
     try {
@@ -145,33 +164,49 @@ function AppContent() {
 
   const checkForNewWins = async (bets: Bet[]) => {
     if (!currentUser) return;
-    const wonBets = bets.filter(bet => bet.status === 'won');
-    const newWins = wonBets.filter(bet => !pendingWins.includes(bet.id));
-    if (newWins.length > 0) {
-      const resolvedBets = bets
-        .filter(bet => bet.status === 'won' || bet.status === 'lost')
-        .sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime());
-      let currentStreak = 0;
-      for (const bet of resolvedBets) {
-        if (bet.status === 'won') {
-          currentStreak++;
-        } else {
-          break;
-        }
-      }
-      const latestWin = newWins[0];
-      if (latestWin.payout) {
-        const event = events.find(e => e.id === latestWin.eventId);
-        const eventTitle = event?.title || 'Event';
-        setWinningAnimationData({
-          winAmount: latestWin.payout,
-          eventTitle,
-          streak: currentStreak
-        });
-        setShowWinningAnimation(true);
-        setPendingWins(prev => [...prev, ...newWins.map(bet => bet.id)]);
+    
+    // Only check for wins that haven't been shown before
+    const wonBets = bets.filter(bet => 
+      bet.status === 'won' && 
+      bet.payout && 
+      bet.payout > 0 && 
+      !shownWins.has(bet.id)
+    );
+
+    if (wonBets.length === 0) return;
+
+    // Calculate current streak from all resolved bets
+    const resolvedBets = bets
+      .filter(bet => bet.status === 'won' || bet.status === 'lost')
+      .sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime());
+    
+    let currentStreak = 0;
+    for (const bet of resolvedBets) {
+      if (bet.status === 'won') {
+        currentStreak++;
+      } else {
+        break;
       }
     }
+
+    // Show animation for the most recent win
+    const latestWin = wonBets.sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime())[0];
+    const event = events.find(e => e.id === latestWin.eventId);
+    const eventTitle = event?.title || 'Event';
+
+    setWinningAnimationData({
+      winAmount: latestWin.payout!,
+      eventTitle,
+      streak: currentStreak
+    });
+    setShowWinningAnimation(true);
+
+    // Mark all new wins as shown
+    setShownWins(prev => {
+      const newShownWins = new Set(prev);
+      wonBets.forEach(bet => newShownWins.add(bet.id));
+      return newShownWins;
+    });
   };
 
   const loadTransactions = async (userId: string) => {
@@ -271,7 +306,9 @@ function AppContent() {
       setEvents([]);
       setUserBets([]);
       setTransactions([]);
-      setPendingWins([]);
+      // Clear shown wins when signing out
+      setShownWins(new Set());
+      localStorage.removeItem('shownWins');
     } catch (error) {}
   };
 
@@ -430,13 +467,13 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 flex items-center justify-center transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <TrendingUp className="w-8 h-8 text-white" />
           </div>
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Loading PredictBet...</p>
+          <p className="text-slate-600 dark:text-slate-300">Loading PredictBet...</p>
         </div>
       </div>
     );
@@ -448,9 +485,9 @@ function AppContent() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 flex items-center justify-center transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-300">Loading user profile...</p>
+          <p className="text-slate-600 dark:text-slate-300">Loading user profile...</p>
         </div>
       </div>
     );
@@ -462,9 +499,9 @@ function AppContent() {
   const netPL = calculateNetPL(userBets);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 dark:border-slate-700/60 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -472,8 +509,8 @@ function AppContent() {
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">PredictBet</h1>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Event Prediction Platform</p>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">PredictBet</h1>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Event Prediction Platform</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -482,18 +519,29 @@ function AppContent() {
                   onClick={() => setCurrentView('events')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     currentView === 'events'
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   Events
                 </button>
                 <button
+                  onClick={() => setCurrentView('leaderboard')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentView === 'leaderboard'
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Leaderboard
+                </button>
+                <button
                   onClick={() => setCurrentView('payments')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                     currentView === 'payments'
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   <Wallet className="w-4 h-4" />
@@ -504,8 +552,8 @@ function AppContent() {
                     onClick={() => setCurrentView('admin')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                       currentView === 'admin'
-                        ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
                     <Shield className="w-4 h-4" />
@@ -518,16 +566,16 @@ function AppContent() {
               <ThemeToggle />
               
               <div className="text-right">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                <div className="text-sm font-medium text-slate-900 dark:text-white">
                   {formatCurrency(currentUser.balance)}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="text-xs text-slate-600 dark:text-slate-400">
                   {currentUser.isAdmin ? 'Admin Balance' : 'Available Balance'}
                 </div>
               </div>
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
               >
                 <Settings className="w-4 h-4" />
                 <span className="text-sm">Sign Out</span>
@@ -537,7 +585,9 @@ function AppContent() {
         </div>
       </header>
 
-      {currentView === 'admin' && currentUser.isAdmin ? (
+      {currentView === 'leaderboard' ? (
+        <Leaderboard currentUser={currentUser} />
+      ) : currentView === 'admin' && currentUser.isAdmin ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <AdminDashboard
             events={events}
@@ -561,23 +611,23 @@ function AppContent() {
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <UserProfile user={{ ...currentUser, netPL }} userBets={userBets} />
-              <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Platform Stats</h3>
+              <div className="mt-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-colors duration-300">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Platform Stats</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Total Pool</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(totalPool)}</span>
+                    <span className="text-slate-600 dark:text-slate-400">Total Pool</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{formatCurrency(totalPool)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Active Events</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{activeEventsCount}</span>
+                    <span className="text-slate-600 dark:text-slate-400">Active Events</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{activeEventsCount}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Total Events</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{totalEvents}</span>
+                    <span className="text-slate-600 dark:text-slate-400">Total Events</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{totalEvents}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">House Edge</span>
+                    <span className="text-slate-600 dark:text-slate-400">House Edge</span>
                     <span className="font-semibold text-orange-600 dark:text-orange-400">15%</span>
                   </div>
                 </div>
@@ -586,12 +636,12 @@ function AppContent() {
             {/* Main Content */}
             <div className="lg:col-span-3">
               {/* Tabs */}
-              <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex gap-2 mb-6 border-b border-slate-200/60 dark:border-slate-700/60">
                 <button
                   className={`px-5 py-2 font-medium transition-all rounded-t-lg focus:outline-none ${
                     eventsTab === 'active'
-                      ? 'bg-white dark:bg-gray-800 shadow text-blue-700 dark:text-blue-300 border-b-2 border-blue-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300'
+                      ? 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow text-blue-700 dark:text-blue-300 border-b-2 border-blue-600'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-300'
                   }`}
                   onClick={() => setEventsTab('active')}
                 >
@@ -600,8 +650,8 @@ function AppContent() {
                 <button
                   className={`px-5 py-2 font-medium transition-all rounded-t-lg focus:outline-none ${
                     eventsTab === 'completed'
-                      ? 'bg-white dark:bg-gray-800 shadow text-green-700 dark:text-green-300 border-b-2 border-green-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-300'
+                      ? 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow text-green-700 dark:text-green-300 border-b-2 border-green-600'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-green-700 dark:hover:text-green-300'
                   }`}
                   onClick={() => setEventsTab('completed')}
                 >
@@ -612,20 +662,20 @@ function AppContent() {
               <div className="flex flex-col md:flex-row gap-4 mb-6">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 w-5 h-5" />
                     <input
                       type="text"
                       placeholder="Search events..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full pl-10 pr-4 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
                     />
                   </div>
                 </div>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="px-4 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white"
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
@@ -634,7 +684,7 @@ function AppContent() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'newest' | 'popular' | 'ending')}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="px-4 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white"
                 >
                   <option value="newest">Newest First</option>
                   <option value="popular">Most Popular</option>
@@ -651,9 +701,9 @@ function AppContent() {
                 >
                   <div>
                     {eventsTab === 'active' ? (
-                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
+                      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-colors duration-300">
                         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-6">
-                          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                             {currentUser.isAdmin ? 'Manage Events' : 'Your Events & Betting History'}
                           </h2>
                           {currentUser.isAdmin && (
@@ -679,9 +729,9 @@ function AppContent() {
                         </div>
                         {filteredActiveEvents.length === 0 && (
                           <div className="text-center py-12">
-                            <div className="text-gray-400 dark:text-gray-500 text-6xl mb-4">🔍</div>
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No active events found</h3>
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <div className="text-slate-400 dark:text-slate-500 text-6xl mb-4">🔍</div>
+                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No active events found</h3>
+                            <p className="text-slate-600 dark:text-slate-400">
                               {searchTerm || selectedCategory !== 'All'
                                 ? 'Try adjusting your search or filters'
                                 : currentUser.isAdmin
@@ -693,8 +743,8 @@ function AppContent() {
                         )}
                       </div>
                     ) : (
-                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors duration-300">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 p-6 transition-colors duration-300">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
                           Completed Events
                         </h2>
                         <CompletedEventsSection
@@ -706,9 +756,9 @@ function AppContent() {
                         />
                         {filteredResolvedEvents.length === 0 && (
                           <div className="text-center py-12">
-                            <div className="text-gray-400 dark:text-gray-500 text-6xl mb-4">📄</div>
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No completed events found</h3>
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <div className="text-slate-400 dark:text-slate-500 text-6xl mb-4">📄</div>
+                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No completed events found</h3>
+                            <p className="text-slate-600 dark:text-slate-400">
                               {searchTerm || selectedCategory !== 'All'
                                 ? 'Try adjusting your search or filters'
                                 : 'No completed events to show yet.'}
