@@ -55,6 +55,11 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
     setCurrentView(section as any);
   };
 
+  // Calculate actual platform stats
+  const totalPool = events.reduce((sum, event) => sum + event.totalPool, 0);
+  const totalEvents = events.length;
+  const activeUsers = events.reduce((sum, event) => sum + event.participantCount, 0);
+
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
@@ -63,6 +68,9 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
             user={currentUser}
             userBets={userBets}
             onNavigate={handleNavigate}
+            totalPool={totalPool}
+            totalEvents={totalEvents}
+            activeUsers={activeUsers}
           />
         );
       

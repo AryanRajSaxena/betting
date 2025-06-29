@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Event, Bet } from '../../types';
 import { MobileEventCard } from './MobileEventCard';
-import { CompletedEventsSection } from '../CompletedEventsSection';
+import { MobileCompletedEventCard } from './MobileCompletedEventCard';
 
 interface MobileEventsSectionProps {
   events: Event[];
@@ -193,13 +193,30 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
         </div>
       ) : (
         <div className="px-4">
-          <CompletedEventsSection
-            resolvedEvents={filteredResolvedEvents}
-            userBets={userBets}
-            userBetsByEvent={userBetsByEvent}
-            onEventClick={onEventSelect}
-            isAdmin={isAdmin}
-          />
+          {/* Reduced Size Completed Events */}
+          {filteredResolvedEvents.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {filteredResolvedEvents.map((event) => (
+                <MobileCompletedEventCard
+                  key={event.id}
+                  event={event}
+                  userBet={userBetsByEvent[event.id] || null}
+                  onEventClick={onEventSelect}
+                  isAdmin={isAdmin}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-slate-400 dark:text-slate-500 text-6xl mb-4">📄</div>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No completed events found</h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                {searchTerm || selectedCategory !== 'All'
+                  ? 'Try adjusting your search or filters'
+                  : 'No completed events to show yet.'}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

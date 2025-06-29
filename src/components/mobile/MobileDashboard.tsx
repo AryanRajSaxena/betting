@@ -19,12 +19,18 @@ interface MobileDashboardProps {
   user: UserType & { netPL?: number };
   userBets: Bet[];
   onNavigate: (section: string) => void;
+  totalPool?: number;
+  totalEvents?: number;
+  activeUsers?: number;
 }
 
 export const MobileDashboard: React.FC<MobileDashboardProps> = ({
   user,
   userBets,
-  onNavigate
+  onNavigate,
+  totalPool = 0,
+  totalEvents = 0,
+  activeUsers = 0
 }) => {
   const [showBalance, setShowBalance] = useState(true);
 
@@ -59,13 +65,6 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
 
   const currentStreak = calculateStreak();
 
-  // Platform statistics (mock data - replace with real data)
-  const platformStats = {
-    totalPool: 2500000,
-    totalEvents: 156,
-    activeUsers: 8420
-  };
-
   return (
     <div className="space-y-6 pb-6">
       {/* Simplified Available Balance Card */}
@@ -94,7 +93,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </div>
 
-      {/* Platform Quick Stats */}
+      {/* Platform Quick Stats - Using Actual Values */}
       <div className="px-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Platform Stats</h3>
         <div className="grid grid-cols-3 gap-4">
@@ -103,7 +102,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               <BarChart3 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
-              {formatCurrency(platformStats.totalPool)}
+              {formatCurrency(totalPool)}
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-400">Total Pool</div>
           </div>
@@ -113,7 +112,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
-              {platformStats.totalEvents}
+              {totalEvents}
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-400">Total Events</div>
           </div>
@@ -123,7 +122,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
-              {platformStats.activeUsers.toLocaleString()}
+              {activeUsers.toLocaleString()}
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-400">Active Users</div>
           </div>
