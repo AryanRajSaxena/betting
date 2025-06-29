@@ -31,23 +31,63 @@ export interface UserActivity {
 }
 
 /**
- * Get leaderboard data with pagination
+ * Get leaderboard data with pagination - sorted by total_winnings by default
  */
 export const getLeaderboard = async (
   limit: number = 100,
   offset: number = 0,
-  sortBy: 'total_points' | 'weekly_earnings' | 'monthly_earnings' | 'current_streak' = 'total_points'
+  sortBy: 'total_winnings' | 'weekly_earnings' | 'monthly_earnings' | 'current_streak' = 'total_winnings'
 ): Promise<LeaderboardUser[]> => {
   try {
-    const { data, error } = await supabase
+    // First try the materialized view
+    let { data, error } = await supabase
       .from('leaderboard_view')
       .select('*')
       .order(sortBy, { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (error) {
-      console.error('Error fetching leaderboard:', error);
-      throw new Error(`Failed to fetch leaderboard: ${error.message}`);
+    // If materialized view fails, fall back to direct users table query
+    if (error || !data) {
+      console.warn('Leaderboard view failed, falling back to users table:', error);
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select(`
+          id,
+          name,
+          total_points,
+          rank_position,
+          tier,
+          current_streak,
+          longest_streak,
+          total_winnings,
+          total_bets,
+          balance,
+          is_verified,
+          achievements,
+          created_at
+        `)
+        .order(sortBy, { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (usersError) {
+        console.error('Error fetching from users table:', usersError);
+        throw new Error(`Failed to fetch leaderboard: ${usersError.message}`);
+      }
+
+      // Map users data to leaderboard format with default values
+      data = (usersData || []).map(user => ({
+        ...user,
+        weekly_earnings: 0,
+        monthly_earnings: 0,
+        current_streak: user.current_streak || 0,
+        longest_streak: user.longest_streak || 0,
+        total_points: user.total_points || 0,
+        rank_position: user.rank_position || 0,
+        tier: user.tier || 'Bronze',
+        achievements: user.achievements || [],
+        is_verified: user.is_verified || false
+      }));
     }
 
     return data || [];
@@ -86,7 +126,7 @@ export const getUserRank = async (userId: string): Promise<{
     }
 
     const totalUsers = count || 1;
-    const percentile = totalUsers > 0 ? ((totalUsers - user.rank_position) / totalUsers) * 100 : 0;
+    const percentile = totalUsers > 0 ? ((totalUsers - (user.rank_position || 0)) / totalUsers) * 100 : 0;
 
     return {
       rank: user.rank_position || 0,

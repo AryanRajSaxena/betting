@@ -47,10 +47,10 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
     switch (tier) {
       case 'Master':
         return {
-          gradient: 'from-red-500 via-pink-500 to-purple-600',
-          bgGradient: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
-          borderColor: 'border-red-300 dark:border-red-600',
-          textColor: 'text-red-700 dark:text-red-300',
+          gradient: 'from-indigo-500 via-purple-500 to-blue-600',
+          bgGradient: 'from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20',
+          borderColor: 'border-indigo-300 dark:border-indigo-600',
+          textColor: 'text-indigo-700 dark:text-indigo-300',
           icon: <Crown className="w-4 h-4" />
         };
       case 'Diamond':
@@ -107,8 +107,9 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
     const loadLeaderboard = async () => {
       setLoading(true);
       try {
+        // Sort by total_winnings instead of total_points
         const [leaderboardData, rankData] = await Promise.all([
-          getLeaderboard(50, 0, 'total_points'),
+          getLeaderboard(50, 0, 'total_winnings'), // Changed from 'total_points'
           getUserRank(currentUser.id)
         ]);
         
@@ -129,10 +130,10 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Trophy className="w-8 h-8 text-white animate-pulse" />
           </div>
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-300">Loading Rankings...</p>
         </div>
       </div>
@@ -141,10 +142,10 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Header */}
+      {/* Header with Blue-Violet Gradient */}
       <div className="px-4">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
             <Trophy className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
@@ -155,11 +156,11 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           </p>
           
           {userRank && (
-            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4">
-              <p className="text-blue-800 dark:text-blue-300 font-medium">
+            <div className="mt-4 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl p-4">
+              <p className="text-indigo-800 dark:text-indigo-300 font-medium">
                 Your Rank: <span className="font-bold">#{userRank.rank}</span> out of {userRank.totalUsers}
               </p>
-              <p className="text-blue-600 dark:text-blue-400 text-sm">
+              <p className="text-indigo-600 dark:text-indigo-400 text-sm">
                 Top {userRank.percentile}% of all players
               </p>
             </div>
@@ -204,7 +205,7 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
 
                 {/* Avatar */}
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm ${
-                  isTop3 ? 'bg-white/20 backdrop-blur-sm text-white' : 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+                  isTop3 ? 'bg-white/20 backdrop-blur-sm text-white' : 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white'
                 }`}>
                   {player.name.split(' ').map(n => n[0]).join('')}
                 </div>
@@ -231,11 +232,11 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
                   <div className={`text-xs ${
                     isTop3 ? 'text-white/80' : 'text-slate-600 dark:text-slate-400'
                   }`}>
-                    {player.current_streak} streak • {player.total_bets} bets
+                    {player.current_streak || 0} streak • {player.total_bets} bets
                   </div>
                 </div>
 
-                {/* Total Earnings (replacing Points) */}
+                {/* Money Earned (Bold) - Replacing Points */}
                 <div className="text-right">
                   <div className={`font-bold ${
                     isTop3 ? 'text-white' : 'text-slate-900 dark:text-white'
@@ -245,7 +246,7 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
                   <div className={`text-xs ${
                     isTop3 ? 'text-white/80' : 'text-slate-600 dark:text-slate-400'
                   }`}>
-                    earnings
+                    <strong>money earned</strong>
                   </div>
                 </div>
 
@@ -279,7 +280,7 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                     {selectedPlayer.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
@@ -316,18 +317,18 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 rounded-xl">
                   <div className="text-2xl font-bold">{formatCurrency(selectedPlayer.total_winnings)}</div>
-                  <div className="text-green-100 text-sm">Total Earnings</div>
+                  <div className="text-green-100 text-sm">Money Earned</div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-4 rounded-xl">
                   <div className="text-2xl font-bold">{selectedPlayer.total_bets}</div>
                   <div className="text-blue-100 text-sm">Total Bets</div>
                 </div>
                 <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-xl">
-                  <div className="text-2xl font-bold">{selectedPlayer.current_streak}</div>
+                  <div className="text-2xl font-bold">{selectedPlayer.current_streak || 0}</div>
                   <div className="text-orange-100 text-sm">Current Streak</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-4 rounded-xl">
-                  <div className="text-2xl font-bold">{selectedPlayer.total_points.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{selectedPlayer.total_points?.toLocaleString() || 0}</div>
                   <div className="text-purple-100 text-sm">Total Points</div>
                 </div>
               </div>
@@ -342,7 +343,7 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Longest Streak</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{selectedPlayer.longest_streak}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{selectedPlayer.longest_streak || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Member Since</span>

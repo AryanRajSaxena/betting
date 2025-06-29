@@ -39,7 +39,7 @@ interface LeaderboardProps {
 export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
   const [players, setPlayers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'total_points' | 'weekly_earnings' | 'monthly_earnings' | 'current_streak'>('total_points');
+  const [sortBy, setSortBy] = useState<'total_winnings' | 'weekly_earnings' | 'monthly_earnings' | 'current_streak'>('total_winnings'); // Changed default
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardUser | null>(null);
   const [userRank, setUserRank] = useState<{ rank: number; totalUsers: number; percentile: number } | null>(null);
@@ -63,10 +63,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
     switch (tier) {
       case 'Master':
         return {
-          gradient: 'from-red-500 via-pink-500 to-purple-600',
-          bgGradient: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
-          borderColor: 'border-red-300 dark:border-red-600',
-          textColor: 'text-red-700 dark:text-red-300',
+          gradient: 'from-indigo-500 via-purple-500 to-blue-600',
+          bgGradient: 'from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20',
+          borderColor: 'border-indigo-300 dark:border-indigo-600',
+          textColor: 'text-indigo-700 dark:text-indigo-300',
           icon: <Shield className="w-4 h-4" />,
           aura: true
         };
@@ -222,7 +222,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         `}>
           {/* Special Effects for Top Tiers */}
           {tierConfig.aura && (
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-pink-500/20 to-purple-600/20 animate-pulse rounded-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-blue-600/20 animate-pulse rounded-2xl"></div>
           )}
           {tierConfig.sparkle && (
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse opacity-30"></div>
@@ -277,10 +277,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             {/* Profile Section */}
             <div className="flex items-center gap-4 mb-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
                   {player.name.split(' ').map(n => n[0]).join('')}
                 </div>
-                {player.current_streak > 0 && (
+                {(player.current_streak || 0) > 0 && (
                   <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <Flame className="w-3 h-3 text-white" />
                   </div>
@@ -304,13 +304,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
               </div>
             </div>
 
-            {/* Points Display */}
+            {/* Money Earned Display (Bold) - Replacing Points */}
             <div className="mb-4">
               <div className="text-3xl font-extrabold text-slate-900 dark:text-white mb-1">
-                {player.total_points.toLocaleString()} pts
+                <strong>{formatCurrency(player.total_winnings)}</strong>
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">
-                {formatCurrency(player.total_winnings)} earned
+                <strong>money earned</strong>
               </div>
             </div>
 
@@ -318,7 +318,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="text-center p-3 bg-slate-50/80 dark:bg-slate-700/80 rounded-lg">
                 <div className="text-lg font-bold text-slate-900 dark:text-white">
-                  {player.current_streak}
+                  {player.current_streak || 0}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">Streak</div>
               </div>
@@ -387,10 +387,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
 
           {/* Avatar */}
           <div className="relative">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {player.name.split(' ').map(n => n[0]).join('')}
             </div>
-            {player.current_streak > 0 && (
+            {(player.current_streak || 0) > 0 && (
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
                 <Flame className="w-2 h-2 text-white" />
               </div>
@@ -415,17 +415,17 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
               </div>
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-400">
-              {player.total_bets > 0 ? ((player.total_winnings / (player.total_bets * 1000)) * 100).toFixed(1) : 0}% win rate • {player.current_streak} streak
+              {player.total_bets > 0 ? ((player.total_winnings / (player.total_bets * 1000)) * 100).toFixed(1) : 0}% win rate • {player.current_streak || 0} streak
             </div>
           </div>
 
-          {/* Points */}
+          {/* Money Earned (Bold) */}
           <div className="text-right min-w-[120px]">
             <div className="font-bold text-slate-900 dark:text-white">
-              {player.total_points.toLocaleString()} pts
+              <strong>{formatCurrency(player.total_winnings)}</strong>
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-400">
-              {formatCurrency(player.total_winnings)}
+              <strong>money earned</strong>
             </div>
           </div>
         </div>
@@ -437,10 +437,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Trophy className="w-8 h-8 text-white animate-pulse" />
           </div>
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-300">Loading Leaderboard...</p>
         </div>
       </div>
@@ -470,10 +470,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header with Blue-Violet Gradient */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
               <Trophy className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -486,7 +486,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             </div>
           </div>
           
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-6 max-w-2xl mx-auto">
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl p-6 max-w-2xl mx-auto">
             <h2 className="text-xl font-bold mb-2">🏆 Hall of Champions</h2>
             <p className="text-blue-100">
               Compete with the best prediction masters and climb your way to the top!
@@ -524,7 +524,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-4 py-3 border border-slate-300/60 dark:border-slate-600/60 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white"
               >
-                <option value="total_points">All-time Points</option>
+                <option value="total_winnings">Money Earned</option>
                 <option value="weekly_earnings">Weekly Performance</option>
                 <option value="monthly_earnings">Monthly Performance</option>
                 <option value="current_streak">Current Streak</option>
@@ -536,7 +536,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         {/* Top 10 Players Section */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-lg flex items-center justify-center">
               <Crown className="w-5 h-5 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -555,7 +555,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         {remainingPlayers.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Users className="w-5 h-5 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -589,7 +589,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
                     {selectedPlayer.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
@@ -628,20 +628,20 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
               {/* Detailed Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-6 rounded-xl">
-                  <div className="text-3xl font-bold">{selectedPlayer.total_points.toLocaleString()}</div>
-                  <div className="text-green-100">Total Points</div>
+                  <div className="text-3xl font-bold">{formatCurrency(selectedPlayer.total_winnings)}</div>
+                  <div className="text-green-100">Money Earned</div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white p-6 rounded-xl">
                   <div className="text-3xl font-bold">{selectedPlayer.total_bets}</div>
                   <div className="text-blue-100">Total Bets</div>
                 </div>
                 <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-6 rounded-xl">
-                  <div className="text-3xl font-bold">{selectedPlayer.current_streak}</div>
+                  <div className="text-3xl font-bold">{selectedPlayer.current_streak || 0}</div>
                   <div className="text-orange-100">Current Streak</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-6 rounded-xl">
-                  <div className="text-3xl font-bold">{formatCurrency(selectedPlayer.total_winnings)}</div>
-                  <div className="text-purple-100">Total Winnings</div>
+                  <div className="text-3xl font-bold">{selectedPlayer.total_points?.toLocaleString() || 0}</div>
+                  <div className="text-purple-100">Total Points</div>
                 </div>
               </div>
 
@@ -664,7 +664,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600 dark:text-slate-400">Longest Streak</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">{selectedPlayer.longest_streak}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{selectedPlayer.longest_streak || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600 dark:text-slate-400">Current Balance</span>

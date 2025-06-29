@@ -111,7 +111,7 @@ export const getUserProfile = async (userId: string) => {
   }
 };
 
-// Create user profile with better error handling
+// Create user profile with updated initial balance (100 tokens instead of 10,000)
 export const createUserProfile = async (userId: string, name: string, phone?: string) => {
   try {
     // Check if this is the admin user
@@ -123,7 +123,7 @@ export const createUserProfile = async (userId: string, name: string, phone?: st
         id: userId,
         name: name || 'User',
         phone: phone || null,
-        balance: isAdmin ? 100000 : 10000,
+        balance: isAdmin ? 100000 : 100, // Updated: 100 tokens for new users, 100,000 for admin
         total_bets: 0,
         total_winnings: 0,
         is_admin: isAdmin

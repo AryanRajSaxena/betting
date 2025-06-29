@@ -67,8 +67,8 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Simplified Available Balance Card */}
-      <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-6 text-white shadow-2xl mx-4">
+      {/* Available Balance Card with Blue-Violet Gradient */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 rounded-3xl p-6 text-white shadow-2xl mx-4">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -98,8 +98,8 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Platform Stats</h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
-            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-              <BarChart3 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 dark:bg-gradient-to-br dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
               {formatCurrency(totalPool)}
@@ -108,7 +108,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           </div>
           
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
-            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:bg-gradient-to-br dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
               <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
@@ -118,7 +118,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           </div>
           
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 dark:bg-gradient-to-br dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
               <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-xl font-bold text-slate-900 dark:text-white">
@@ -129,10 +129,10 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </div>
 
-      {/* Streamlined Performance Cards */}
+      {/* Performance Cards with Blue-Violet Gradient */}
       <div className="px-4">
         <div className="grid grid-cols-2 gap-4">
-          {/* Simplified Total Profit Card */}
+          {/* Total Profit Card - Updated Logic */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <div className="mb-3">
               <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Total Profit</p>
@@ -141,7 +141,8 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               }`}>
                 {netPL >= 0 ? '+' : ''}{formatCurrency(netPL)}
               </p>
-              {netPL >= 0 && (
+              {/* Only show performance message for positive profits */}
+              {netPL > 0 && (
                 <p className="text-green-600 dark:text-green-400 text-xs font-medium mt-1">
                   Great performance! 🎉
                 </p>
@@ -149,10 +150,10 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
             </div>
           </div>
 
-          {/* Aligned Win Streak Card */}
+          {/* Win Streak Card with Blue-Violet Gradient */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-red-100 dark:bg-gradient-to-br dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl flex items-center justify-center">
                 <Flame className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
@@ -172,13 +173,13 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </div>
 
-      {/* Active Bets Section - Bottom Position */}
+      {/* Active Bets Section with Event Titles */}
       <div className="px-4">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
           <div className="p-5 border-b border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:bg-gradient-to-br dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl flex items-center justify-center">
                   <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
@@ -252,7 +253,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                 </p>
                 <button
                   onClick={() => onNavigate('events')}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl active:scale-95"
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl active:scale-95"
                 >
                   Browse Events
                 </button>
@@ -262,23 +263,23 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </div>
 
-      {/* Achievement Banner */}
+      {/* Achievement Banner with Blue-Violet Gradient */}
       {currentStreak >= 5 && (
         <div className="mx-4">
-          <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-xl">
+          <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 rounded-2xl p-6 text-white shadow-xl">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold mb-1">Legendary Streak! 🏆</h3>
-                <p className="text-yellow-100 text-sm">
+                <p className="text-blue-100 text-sm">
                   {currentStreak} wins in a row! You're in the top 1% of predictors!
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold">{currentStreak}</div>
-                <div className="text-yellow-100 text-xs">wins</div>
+                <div className="text-blue-100 text-xs">wins</div>
               </div>
             </div>
           </div>
