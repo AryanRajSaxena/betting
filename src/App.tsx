@@ -14,6 +14,8 @@ import { CompletedEventsSection } from './components/CompletedEventsSection';
 import { Leaderboard } from './components/Leaderboard';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { MobileLayout } from './components/mobile/MobileLayout';
+import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { getCurrentUser, onAuthStateChange, signOut, getUserProfile, createUserProfile } from './services/auth';
 import { fetchEvents, createEvent } from './services/events';
 import { placeBet } from './services/betting';
@@ -49,6 +51,9 @@ function AppContent() {
     eventTitle: string;
     streak: number;
   } | null>(null);
+
+  // Device detection
+  const deviceInfo = useDeviceDetection();
 
   // Track shown wins using localStorage to persist across sessions
   const [shownWins, setShownWins] = useState<Set<string>>(() => {
@@ -498,6 +503,30 @@ function AppContent() {
   const activeEventsCount = activeEvents.length;
   const netPL = calculateNetPL(userBets);
 
+  // Use mobile layout for mobile devices
+  if (deviceInfo.isMobile) {
+    return (
+      <MobileLayout
+        currentUser={{ ...currentUser, netPL }}
+        events={events}
+        userBets={userBets}
+        userBetsByEvent={userBetsByEvent}
+        transactions={transactions}
+        paymentMethods={paymentMethods}
+        onSignOut={handleSignOut}
+        onPlaceBet={handlePlaceBet}
+        onCreateEvent={handleCreateEvent}
+        onAddMoney={handleAddMoney}
+        onWithdraw={handleWithdraw}
+        onRefreshEvents={loadEvents}
+        showWinningAnimation={showWinningAnimation}
+        winningAnimationData={winningAnimationData}
+        onCloseWinningAnimation={() => setShowWinningAnimation(false)}
+      />
+    );
+  }
+
+  // Desktop layout (existing code)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
       {/* Header */}
