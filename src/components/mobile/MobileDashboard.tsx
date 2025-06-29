@@ -9,7 +9,9 @@ import {
   Trophy,
   Target,
   Zap,
-  Star
+  Star,
+  Users,
+  BarChart3
 } from 'lucide-react';
 import { User as UserType, Bet } from '../../types';
 
@@ -57,14 +59,20 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
 
   const currentStreak = calculateStreak();
 
+  // Platform statistics (mock data - replace with real data)
+  const platformStats = {
+    totalPool: 2500000,
+    totalEvents: 156,
+    activeUsers: 8420
+  };
+
   return (
     <div className="space-y-6 pb-6">
-      {/* Available Balance Card */}
+      {/* Simplified Available Balance Card */}
       <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-6 text-white shadow-2xl mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-blue-100 text-sm font-medium">Available Balance</p>
-            <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
               <h2 className="text-3xl font-bold">
                 {showBalance ? formatCurrency(user.balance) : '₹ ••••••'}
               </h2>
@@ -75,44 +83,59 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                 {showBalance ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-          </div>
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-            <TrendingUp className="w-8 h-8 text-white" />
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-blue-100 text-sm">Ready to win more</p>
-            <p className="text-white font-semibold">Place your next bet!</p>
+            <p className="text-blue-100 text-sm font-medium">Available Balance</p>
           </div>
           <button
             onClick={() => onNavigate('events')}
-            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-xl transition-colors flex items-center gap-2"
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-3 rounded-2xl transition-colors font-semibold"
           >
-            <span className="font-medium">Bet Now</span>
-            <ChevronRight className="w-4 h-4" />
+            Bet Now
           </button>
         </div>
       </div>
 
-      {/* Performance Cards */}
+      {/* Platform Quick Stats */}
+      <div className="px-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Platform Stats</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
+            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <BarChart3 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-xl font-bold text-slate-900 dark:text-white">
+              {formatCurrency(platformStats.totalPool)}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">Total Pool</div>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="text-xl font-bold text-slate-900 dark:text-white">
+              {platformStats.totalEvents}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">Total Events</div>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="text-xl font-bold text-slate-900 dark:text-white">
+              {platformStats.activeUsers.toLocaleString()}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">Active Users</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Streamlined Performance Cards */}
       <div className="px-4">
         <div className="grid grid-cols-2 gap-4">
-          {/* Total Profit Card */}
+          {/* Simplified Total Profit Card */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                netPL >= 0 ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
-              }`}>
-                {netPL >= 0 ? (
-                  <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
-                ) : (
-                  <Target className="w-6 h-6 text-red-600 dark:text-red-400" />
-                )}
-              </div>
-            </div>
-            <div>
+            <div className="mb-3">
               <p className="text-slate-600 dark:text-slate-400 text-sm font-medium mb-1">Total Profit</p>
               <p className={`text-2xl font-bold ${
                 netPL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
@@ -127,7 +150,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
             </div>
           </div>
 
-          {/* Current Streak Card */}
+          {/* Aligned Win Streak Card */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center">
@@ -150,7 +173,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       </div>
 
-      {/* Active Bets Section */}
+      {/* Active Bets Section - Bottom Position */}
       <div className="px-4">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
           <div className="p-5 border-b border-slate-200/50 dark:border-slate-700/50">
@@ -177,7 +200,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
             </div>
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto scrollbar-hide">
             {activeBets.length > 0 ? (
               <div className="divide-y divide-slate-200/50 dark:divide-slate-700/50">
                 {activeBets.slice(0, 5).map((bet, index) => (
@@ -262,42 +285,6 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           </div>
         </div>
       )}
-
-      {/* Quick Stats */}
-      <div className="px-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Stats</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <Trophy className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {formatCurrency(user.totalWinnings)}
-              </p>
-              <p className="text-slate-600 dark:text-slate-400 text-xs">Total Winnings</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{user.totalBets}</p>
-              <p className="text-slate-600 dark:text-slate-400 text-xs">Total Bets</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                <Star className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {resolvedBets.length > 0 ? ((wonBets.length / resolvedBets.length) * 100).toFixed(0) : 0}%
-              </p>
-              <p className="text-slate-600 dark:text-slate-400 text-xs">Win Rate</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

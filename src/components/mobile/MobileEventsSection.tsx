@@ -32,6 +32,7 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
   const [eventsTab, setEventsTab] = useState<'active' | 'completed'>('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showSearch, setShowSearch] = useState(false);
 
   const categories = ['All', 'Weather', 'Cryptocurrency', 'Sports', 'Technology', 'Finance', 'Politics', 'Entertainment'];
 
@@ -68,24 +69,69 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Header */}
+      {/* Clean Header */}
       <div className="px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Events</h2>
-            <p className="text-slate-600 dark:text-slate-400">
-              {eventsTab === 'active' ? `${filteredActiveEvents.length} active events` : `${filteredResolvedEvents.length} completed`}
-            </p>
           </div>
-          {isAdmin && eventsTab === 'active' && (
+          <div className="flex items-center gap-3">
+            {/* Search Icon */}
             <button
-              onClick={onCreateEvent}
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white p-3 rounded-2xl shadow-lg active:scale-95 transition-all"
+              onClick={() => setShowSearch(!showSearch)}
+              className={`p-3 rounded-2xl transition-all ${
+                showSearch 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             >
-              <Plus className="w-6 h-6" />
+              <Search className="w-5 h-5" />
             </button>
-          )}
+            
+            {isAdmin && eventsTab === 'active' && (
+              <button
+                onClick={onCreateEvent}
+                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white p-3 rounded-2xl shadow-lg active:scale-95 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Expandable Search */}
+        {showSearch && (
+          <div className="space-y-3 mb-6 animate-slide-down">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-slate-300/60 dark:border-slate-600/60 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
+                autoFocus
+              />
+            </div>
+            
+            {/* Category Filter - Horizontal Scroll */}
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
+                    selectedCategory === category
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex bg-slate-100 dark:bg-slate-800 rounded-2xl p-1 mb-6">
@@ -110,37 +156,6 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
             Completed
           </button>
         </div>
-
-        {/* Search and Filters */}
-        <div className="space-y-3 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-slate-300/60 dark:border-slate-600/60 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
-            />
-          </div>
-          
-          {/* Category Filter - Horizontal Scroll */}
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === category
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Events Content */}
@@ -148,27 +163,18 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
         <div>
           {filteredActiveEvents.length > 0 ? (
             <div className="space-y-4 px-4">
-              {/* Horizontal scroll for events */}
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {/* Vertical Layout for Event Cards */}
+              <div className="space-y-4">
                 {filteredActiveEvents.map((event) => (
-                  <div key={event.id} className="flex-shrink-0 w-80">
-                    <MobileEventCard
-                      event={event}
-                      userBet={userBetsByEvent[event.id] || null}
-                      onBet={onEventSelect}
-                      isAdmin={isAdmin}
-                    />
-                  </div>
+                  <MobileEventCard
+                    key={event.id}
+                    event={event}
+                    userBet={userBetsByEvent[event.id] || null}
+                    onBet={onEventSelect}
+                    isAdmin={isAdmin}
+                  />
                 ))}
               </div>
-              
-              {filteredActiveEvents.length > 3 && (
-                <div className="text-center">
-                  <p className="text-slate-600 dark:text-slate-400 text-sm">
-                    Swipe to see more events →
-                  </p>
-                </div>
-              )}
             </div>
           ) : (
             <div className="text-center py-12 px-4">

@@ -187,7 +187,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               )}
             </nav>
 
-            {/* Sign Out Button */}
+            {/* Logout Button */}
             <button
               onClick={handleSignOut}
               className="w-full mt-4 p-4 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 touch-feedback"
