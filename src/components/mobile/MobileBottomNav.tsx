@@ -5,7 +5,7 @@ import {
   Wallet, 
   Trophy, 
   Shield,
-  BarChart3
+  Calendar
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -20,7 +20,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   isAdmin
 }) => {
   const tabs = [
-    { id: 'events', label: 'Events', icon: Home },
+    { id: 'dashboard', label: 'Home', icon: Home },
+    { id: 'events', label: 'Events', icon: Calendar },
     { id: 'leaderboard', label: 'Rankings', icon: TrendingUp },
     { id: 'payments', label: 'Wallet', icon: Wallet },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Shield }] : [])
@@ -37,16 +38,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 min-w-[60px] ${
+              className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 min-w-[60px] relative ${
                 isActive
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 scale-105'
+                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 scale-105 shadow-lg'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <Icon className={`w-5 h-5 mb-1 ${isActive ? 'animate-pulse' : ''}`} />
               <span className="text-xs font-medium">{tab.label}</span>
               {isActive && (
-                <div className="absolute -top-1 w-1 h-1 bg-blue-600 rounded-full animate-ping" />
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full animate-ping" />
               )}
             </button>
           );
