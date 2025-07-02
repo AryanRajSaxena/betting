@@ -13,10 +13,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  User as UserIcon
+  User as UserIcon,
+  RefreshCw
 } from 'lucide-react';
 import { User } from '../../types';
-import { getLeaderboard, getUserRank, LeaderboardUser, getTierInfo } from '../../services/leaderboard';
+import { getLeaderboard, getUserRank, LeaderboardUser, getTierInfo, refreshLeaderboard } from '../../services/leaderboard';
 
 interface MobileLeaderboardSectionProps {
   currentUser: User;
@@ -27,6 +28,7 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
 }) => {
   const [players, setPlayers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [userRank, setUserRank] = useState<{ rank: number; totalUsers: number; percentile: number } | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardUser | null>(null);
 
@@ -51,7 +53,8 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           bgGradient: 'from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20',
           borderColor: 'border-indigo-300 dark:border-indigo-600',
           textColor: 'text-indigo-700 dark:text-indigo-300',
-          icon: <Crown className="w-4 h-4" />
+          icon: <Crown className="w-4 h-4" />,
+          aura: true
         };
       case 'Diamond':
         return {
@@ -59,7 +62,8 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           bgGradient: 'from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20',
           borderColor: 'border-cyan-300 dark:border-cyan-600',
           textColor: 'text-cyan-700 dark:text-cyan-300',
-          icon: <Star className="w-4 h-4" />
+          icon: <Star className="w-4 h-4" />,
+          sparkle: true
         };
       case 'Platinum':
         return {
@@ -67,7 +71,8 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           bgGradient: 'from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20',
           borderColor: 'border-gray-300 dark:border-gray-600',
           textColor: 'text-gray-700 dark:text-gray-300',
-          icon: <Award className="w-4 h-4" />
+          icon: <Award className="w-4 h-4" />,
+          glow: true
         };
       case 'Gold':
         return {
@@ -75,7 +80,8 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           bgGradient: 'from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20',
           borderColor: 'border-yellow-300 dark:border-yellow-600',
           textColor: 'text-yellow-700 dark:text-yellow-300',
-          icon: <Trophy className="w-4 h-4" />
+          icon: <Trophy className="w-4 h-4" />,
+          shine: true
         };
       case 'Silver':
         return {
@@ -83,15 +89,24 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           bgGradient: 'from-gray-50 to-slate-100 dark:from-gray-800/20 dark:to-slate-800/20',
           borderColor: 'border-gray-200 dark:border-gray-600',
           textColor: 'text-gray-600 dark:text-gray-400',
-          icon: <Medal className="w-4 h-4" />
+          icon: <Medal className="w-4 h-4" />,
+          metallic: true
         };
-      default:
+      case 'Bronze':
         return {
           gradient: 'from-orange-300 via-amber-400 to-orange-600',
           bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20',
           borderColor: 'border-orange-200 dark:border-orange-600',
           textColor: 'text-orange-600 dark:text-orange-400',
           icon: <Target className="w-4 h-4" />
+        };
+      default:
+        return {
+          gradient: 'from-gray-300 to-gray-500',
+          bgGradient: 'from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20',
+          borderColor: 'border-gray-200 dark:border-gray-600',
+          textColor: 'text-gray-600 dark:text-gray-400',
+          icon: <Star className="w-4 h-4" />
         };
     }
   };
@@ -103,27 +118,48 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
     return null;
   };
 
+  const loadLeaderboard = async () => {
+    try {
+      console.log('[MobileLeaderboard] Loading leaderboard data...');
+      
+      const [leaderboardData, rankData] = await Promise.all([
+        getLeaderboard(50, 0, 'total_winnings'),
+        getUserRank(currentUser.id)
+      ]);
+      
+      console.log('[MobileLeaderboard] Loaded data:', {
+        playersCount: leaderboardData.length,
+        userRank: rankData
+      });
+      
+      setPlayers(leaderboardData);
+      setUserRank(rankData);
+    } catch (error) {
+      console.error('[MobileLeaderboard] Failed to load leaderboard:', error);
+      setPlayers([]);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshLeaderboard();
+      await loadLeaderboard();
+    } catch (error) {
+      console.error('[MobileLeaderboard] Failed to refresh:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const loadLeaderboard = async () => {
+    const initializeLeaderboard = async () => {
       setLoading(true);
-      try {
-        // Sort by total_winnings instead of total_points
-        const [leaderboardData, rankData] = await Promise.all([
-          getLeaderboard(50, 0, 'total_winnings'), // Changed from 'total_points'
-          getUserRank(currentUser.id)
-        ]);
-        
-        setPlayers(leaderboardData);
-        setUserRank(rankData);
-      } catch (error) {
-        console.error('Failed to load leaderboard:', error);
-        setPlayers([]);
-      } finally {
-        setLoading(false);
-      }
+      await loadLeaderboard();
+      setLoading(false);
     };
 
-    loadLeaderboard();
+    initializeLeaderboard();
   }, [currentUser.id]);
 
   if (loading) {
@@ -165,6 +201,16 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
               </p>
             </div>
           )}
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="mt-4 flex items-center gap-2 mx-auto px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh Rankings'}
+          </button>
         </div>
       </div>
 
@@ -229,14 +275,18 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
                       {player.tier}
                     </div>
                   </div>
-                  <div className={`text-xs ${
+                  <div className={`text-xs flex items-center gap-3 ${
                     isTop3 ? 'text-white/80' : 'text-slate-600 dark:text-slate-400'
                   }`}>
-                    {player.current_streak || 0} streak • {player.total_bets} bets
+                    <span className="flex items-center gap-1">
+                      <Flame className="w-3 h-3" />
+                      {player.current_streak || 0} streak
+                    </span>
+                    <span>{player.total_bets} bets</span>
                   </div>
                 </div>
 
-                {/* Money Earned (Bold) - Replacing Points */}
+                {/* Money Earned (Bold) */}
                 <div className="text-right">
                   <div className={`font-bold ${
                     isTop3 ? 'text-white' : 'text-slate-900 dark:text-white'
@@ -269,6 +319,12 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
           <p className="text-slate-600 dark:text-slate-400">
             Be the first to make predictions and climb the leaderboard!
           </p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+          >
+            Refresh Rankings
+          </button>
         </div>
       )}
 
@@ -337,7 +393,11 @@ export const MobileLeaderboardSection: React.FC<MobileLeaderboardSectionProps> =
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Weekly Earnings</span>
-                  <span className="font-semibold text-green-600 dark:text-green-400">
+                  <span className={`font-semibold ${
+                    (selectedPlayer.weekly_earnings || 0) >= 0 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
                     {formatCurrency(selectedPlayer.weekly_earnings || 0)}
                   </span>
                 </div>
