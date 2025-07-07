@@ -28,6 +28,7 @@ export const MobileUserProfile: React.FC<MobileUserProfileProps> = ({ user, user
     }).format(amount);
   };
 
+  // Filter for ONLY active bets (status = 'active' and result not declared)
   const activeBets = userBets.filter(bet => bet.status === 'active');
   const wonBets = userBets.filter(bet => bet.status === 'won');
   const resolvedBets = userBets.filter(bet => bet.status === 'won' || bet.status === 'lost');
@@ -149,7 +150,7 @@ export const MobileUserProfile: React.FC<MobileUserProfileProps> = ({ user, user
         </div>
       </div>
 
-      {/* Active Bets */}
+      {/* Active Bets - FILTERED FOR ONLY ACTIVE BETS */}
       {activeBets.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
@@ -172,7 +173,7 @@ export const MobileUserProfile: React.FC<MobileUserProfileProps> = ({ user, user
                   <div className="font-bold text-slate-900 dark:text-white">
                     {formatCurrency(bet.amount)}
                   </div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400">Active</div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400">Pending Result</div>
                 </div>
               </div>
             ))}
@@ -223,7 +224,7 @@ export const MobileUserProfile: React.FC<MobileUserProfileProps> = ({ user, user
             Place your first bet and join thousands of successful predictors!
           </p>
         </div>
-      ) : (
+      ) : activeBets.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 text-center">
           <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
             <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -238,7 +239,7 @@ export const MobileUserProfile: React.FC<MobileUserProfileProps> = ({ user, user
             }
           </p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

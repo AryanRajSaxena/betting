@@ -53,6 +53,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
     }).format(amount);
   };
 
+  // Filter for ONLY active bets (status = 'active' and result not declared)
   const activeBets = userBets.filter(bet => bet.status === 'active');
   const wonBets = userBets.filter(bet => bet.status === 'won');
   const resolvedBets = userBets.filter(bet => bet.status === 'won' || bet.status === 'lost');
@@ -344,7 +345,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
         </div>
       )}
 
-      {/* Active Bets Section */}
+      {/* Active Bets Section - FILTERED FOR ONLY ACTIVE BETS */}
       <div className="px-4">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
           <div className="p-5 border-b border-slate-200/50 dark:border-slate-700/50">
@@ -356,7 +357,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Your Active Bets</h3>
                   <p className="text-slate-600 dark:text-slate-400 text-sm">
-                    {activeBets.length} active • {formatCurrency(totalActiveBetAmount)} total
+                    {activeBets.length} pending results • {formatCurrency(totalActiveBetAmount)} total
                   </p>
                 </div>
               </div>
@@ -385,7 +386,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                           </p>
                         </div>
                         <p className="text-slate-600 dark:text-slate-400 text-xs">
-                          Placed {bet.placedAt.toLocaleDateString()}
+                          Placed {bet.placedAt.toLocaleDateString()} at {bet.placedAt.toLocaleTimeString()}
                         </p>
                       </div>
                       <div className="text-right">
@@ -393,7 +394,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                           {formatCurrency(bet.amount)}
                         </p>
                         <p className="text-blue-600 dark:text-blue-400 text-xs font-medium">
-                          Active
+                          Pending Result
                         </p>
                       </div>
                     </div>
