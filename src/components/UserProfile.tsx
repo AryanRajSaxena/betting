@@ -29,6 +29,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, userBets }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [eventNames, setEventNames] = useState<{ [eventId: string]: string }>({});
+  const [eventExpires, setEventExpires] = useState<{ [eventId: string]: Date }>({});
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -37,6 +38,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, userBets }) => {
       maximumFractionDigits: 0
     }).format(amount);
   };
+
+  // Add this helper function in your component
+const isEnding = (date: Date) => {
+  const timeLeft = date.getTime() - Date.now();
+  return timeLeft > 0 && timeLeft < 12 * 60 * 60 * 1000; // Less than 12 hours
+};
 
   // Calculate betting streaks
   const calculateStreaks = (bets: Bet[]) => {
@@ -153,6 +160,56 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, userBets }) => {
     fetchStats();
   }, [user, userBets]);
 
+  useEffect(() => {
+  // Fetch event names and expiration dates for all unique eventIds in userBets
+  const fetchEventData = async () => {
+    const uniqueEventIds = Array.from(new Set(userBets.map(bet => bet.eventId)));
+    if (uniqueEventIds.length === 0) return;
+
+    const { data, error } = await supabase
+      .from('events')
+      .select('id, title, expires_at') // Add expiresAt to the selection
+      .in('id', uniqueEventIds);
+
+    if (!error && data) {
+      const namesMap: { [eventId: string]: string } = {};
+      const expiresMap: { [eventId: string]: Date } = {}; // New map for expiration dates
+      
+      data.forEach((event: { id: string; title: string; expires_at: string }) => {
+        namesMap[event.id] = event.title;
+        expiresMap[event.id] = new Date(event.expires_at); // Convert to Date object
+      });
+      
+      setEventNames(namesMap);
+      setEventExpires(expiresMap); // Set the new state
+    }
+  };
+
+  fetchEventData();
+}, [userBets]);
+const formatTimeLeft = (expiryDate: Date): string => {
+  const now = new Date();
+  const timeDiff = expiryDate.getTime() - now.getTime();
+  
+  // Return "Expired" if the event has ended
+  if (timeDiff <= 0) {
+    return "Expired";
+  }
+  
+  // Calculate days, hours, minutes
+  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  // Format the string based on the remaining time
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''} and ${hours} hour${hours > 1 ? 's' : ''} left`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} and ${minutes} minute${minutes > 1 ? 's' : ''} left`;
+  } else {
+    return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
+  }
+};
   useEffect(() => {
     // Fetch event names for all unique eventIds in userBets
     const fetchEventNames = async () => {
@@ -345,29 +402,38 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, userBets }) => {
             Your Active Bets ({activeBets.length} pending)
           </h3>
           <div className="space-y-2">
+
+
             {betsToShow.map((bet) => (
-              <div key={bet.id} className="flex items-center justify-between p-3 rounded-lg border backdrop-blur-sm bg-blue-50/80 dark:bg-blue-900/20 border-blue-200/50 dark:border-blue-800/50">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <p className="font-medium text-slate-900 dark:text-white text-sm">
-                      {eventNames[bet.eventId] || `Event #${bet.eventId.slice(-4)}`}
-                    </p>
-                  </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-xs">
-                    Placed on {bet.placedAt.toLocaleDateString()} at {bet.placedAt.toLocaleTimeString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(bet.amount)}
-                  </p>
-                  <p className="text-blue-600 dark:text-blue-400 text-xs font-medium">
-                    Pending Result
-                  </p>
-                </div>
-              </div>
-            ))}
+  <div key={bet.id} className="flex items-center justify-between p-3 rounded-lg border backdrop-blur-sm bg-blue-50/80 dark:bg-blue-900/20 border-blue-200/50 dark:border-blue-800/50">
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+        <p className="font-medium text-slate-900 dark:text-white text-sm">
+          {eventNames[bet.eventId] || `Event #${bet.eventId.slice(-4)}`}
+        </p>
+      </div>
+      <p className="text-slate-600 dark:text-slate-400 text-xs">
+        {eventExpires[bet.eventId] ? (
+          <>
+            {formatTimeLeft(eventExpires[bet.eventId])}
+            {isEnding(eventExpires[bet.eventId]) && <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium">• Ending soon</span>}
+          </>
+        ) : (
+          <>Placed on {bet.placedAt.toLocaleDateString()} at {bet.placedAt.toLocaleTimeString()}</>
+        )}
+      </p>
+    </div>
+    <div className="text-right">
+      <p className="font-bold text-slate-900 dark:text-white">
+        {formatCurrency(bet.amount)}
+      </p>
+      <p className="text-blue-600 dark:text-blue-400 text-xs font-medium">
+        Pending Result
+      </p>
+    </div>
+  </div>
+))}
             
             {activeBets.length > 3 && (
               <div className="text-center text-sm text-slate-600 dark:text-slate-400">
