@@ -16,6 +16,9 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { MobileLayout } from './components/mobile/MobileLayout';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
+import { useStreakManager } from './hooks/useStreakManager';
+import { StreakNotification } from './components/StreakNotification';
+import { StreakWarningBanner } from './components/StreakWarningBanner';
 import { getCurrentUser, onAuthStateChange, signOut, getUserProfile, createUserProfile } from './services/auth';
 import { fetchEvents, createEvent } from './services/events';
 import { placeBet } from './services/betting';
@@ -54,6 +57,23 @@ function AppContent() {
 
   // Device detection
   const deviceInfo = useDeviceDetection();
+
+  // Streak management
+  const {
+    streakStatus,
+    streakResetMessage,
+    onBetPlaced,
+    refreshStreak,
+    dismissStreakResetMessage
+  } = useStreakManager({
+    userId: currentUser?.id || '',
+    onStreakReset: (message) => {
+      console.log('Streak reset:', message);
+    },
+    onStreakWarning: (warning) => {
+      console.log('Streak warning:', warning);
+    }
+  });
 
   // Track shown wins using localStorage to persist across sessions
   const [shownWins, setShownWins] = useState<Set<string>>(() => {
@@ -373,6 +393,8 @@ function AppContent() {
     }
     try {
       await placeBet(currentUser.id, eventId, optionId, amount);
+      // Update streak when bet is placed
+      await onBetPlaced();
       setCurrentUser(prev => prev ? ({
         ...prev,
         balance: prev.balance - amount,
@@ -506,29 +528,79 @@ function AppContent() {
   // Use mobile layout for mobile devices
   if (deviceInfo.isMobile) {
     return (
-      <MobileLayout
-        currentUser={{ ...currentUser, netPL }}
-        events={events}
-        userBets={userBets}
-        userBetsByEvent={userBetsByEvent}
-        transactions={transactions}
-        paymentMethods={paymentMethods}
-        onSignOut={handleSignOut}
-        onPlaceBet={handlePlaceBet}
-        onCreateEvent={handleCreateEvent}
-        onAddMoney={handleAddMoney}
-        onWithdraw={handleWithdraw}
-        onRefreshEvents={loadEvents}
-        showWinningAnimation={showWinningAnimation}
-        winningAnimationData={winningAnimationData}
-        onCloseWinningAnimation={() => setShowWinningAnimation(false)}
-      />
+      <>
+        {/* Streak Notifications */}
+        {streakResetMessage && (
+          <StreakNotification
+            message={streakResetMessage}
+            type="reset"
+            onDismiss={dismissStreakResetMessage}
+            autoHide={false}
+          />
+        )}
+        
+        {/* Streak Warning Banner */}
+        {streakStatus.warning.showWarning && (
+          <StreakWarningBanner
+            hoursRemaining={streakStatus.hoursRemaining}
+            currentStreak={streakStatus.currentStreak}
+            urgencyLevel={streakStatus.warning.urgencyLevel}
+            onActionClick={() => {
+              // Navigate to events section
+              // This will be handled by the mobile layout
+            }}
+          />
+        )}
+
+        <MobileLayout
+          currentUser={{ ...currentUser, netPL }}
+          events={events}
+          userBets={userBets}
+          userBetsByEvent={userBetsByEvent}
+          transactions={transactions}
+          paymentMethods={paymentMethods}
+          onSignOut={handleSignOut}
+          onPlaceBet={handlePlaceBet}
+          onCreateEvent={handleCreateEvent}
+          onAddMoney={handleAddMoney}
+          onWithdraw={handleWithdraw}
+          onRefreshEvents={loadEvents}
+          showWinningAnimation={showWinningAnimation}
+          winningAnimationData={winningAnimationData}
+          onCloseWinningAnimation={() => setShowWinningAnimation(false)}
+          streakStatus={streakStatus}
+        />
+      </>
     );
   }
 
   // Desktop layout (existing code)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+      {/* Streak Notifications */}
+      {streakResetMessage && (
+        <StreakNotification
+          message={streakResetMessage}
+          type="reset"
+          onDismiss={dismissStreakResetMessage}
+          autoHide={false}
+        />
+      )}
+      
+      {/* Streak Warning Banner */}
+      {streakStatus.warning.showWarning && (
+        <div className="fixed top-20 left-0 right-0 z-40">
+          <StreakWarningBanner
+            hoursRemaining={streakStatus.hoursRemaining}
+            currentStreak={streakStatus.currentStreak}
+            urgencyLevel={streakStatus.warning.urgencyLevel}
+            onActionClick={() => {
+              setCurrentView('events');
+            }}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 dark:border-slate-700/60 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

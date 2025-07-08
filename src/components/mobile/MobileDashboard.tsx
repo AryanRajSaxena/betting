@@ -32,6 +32,7 @@ interface MobileDashboardProps {
   totalPool?: number;
   totalEvents?: number;
   activeUsers?: number;
+  streakStatus?: any;
 }
 
 export const MobileDashboard: React.FC<MobileDashboardProps> = ({
@@ -41,7 +42,8 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
   onNavigate,
   totalPool = 0,
   totalEvents = 0,
-  activeUsers = 0
+  activeUsers = 0,
+  streakStatus
 }) => {
   const [showBalance, setShowBalance] = useState(true);
 
@@ -156,7 +158,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
                 <span className="text-sm font-medium">Win Streak</span>
               </div>
               <div className="text-2xl font-bold">
-                {currentStreak}
+                {streakStatus?.currentStreak || currentStreak}
                 {currentStreak >= 3 && <span className="text-lg ml-1">🔥</span>}
               </div>
               {currentStreak >= 3 && (
@@ -179,6 +181,13 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
               )}
             </div>
           </div>
+          
+          {/* Streak Timer */}
+          {streakStatus?.hoursRemaining < 12 && streakStatus?.currentStreak > 0 && (
+            <div className="text-xs text-orange-600 dark:text-orange-400 mt-2 text-center">
+              {Math.floor(streakStatus.hoursRemaining)}h remaining
+            </div>
+          )}
         </div>
       </div>
 

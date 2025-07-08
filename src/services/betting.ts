@@ -4,6 +4,7 @@
  */
 import { supabase } from '../lib/supabase';
 import { Event, BetOption, Bet } from '../types';
+import { updateLastBetTimestamp } from './streakManager';
 
 export interface BetCalculation {
   potentialReturn: number;
@@ -182,6 +183,9 @@ export const placeBet = async (
 
   // Update dynamic odds for all options in this event
   await updateDynamicOdds(eventId);
+
+  // Update user's last bet timestamp for streak tracking
+  await updateLastBetTimestamp(userId);
 
   return { bet, transaction };
 };

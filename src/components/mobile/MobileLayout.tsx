@@ -10,6 +10,8 @@ import { AdminDashboard } from '../admin/AdminDashboard';
 import { CreateEventModal } from '../CreateEventModal';
 import { WinningAnimation } from '../WinningAnimation';
 import { Event, User, Bet, Transaction, PaymentMethod } from '../../types';
+import { StreakNotification } from '../StreakNotification';
+import { StreakWarningBanner } from '../StreakWarningBanner';
 
 interface MobileLayoutProps {
   currentUser: User & { netPL?: number };
@@ -27,6 +29,7 @@ interface MobileLayoutProps {
   showWinningAnimation: boolean;
   winningAnimationData: any;
   onCloseWinningAnimation: () => void;
+  streakStatus?: any;
 }
 
 export const MobileLayout: React.FC<MobileLayoutProps> = ({
@@ -44,7 +47,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
   onRefreshEvents,
   showWinningAnimation,
   winningAnimationData,
-  onCloseWinningAnimation
+  onCloseWinningAnimation,
+  streakStatus
 }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'events' | 'payments' | 'leaderboard' | 'admin'>('dashboard');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -132,6 +136,16 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
         onSignOut={onSignOut}
         onMenuToggle={setIsMenuOpen}
       />
+
+      {/* Streak Warning Banner for Mobile */}
+      {streakStatus?.warning?.showWarning && (
+        <StreakWarningBanner
+          hoursRemaining={streakStatus.hoursRemaining}
+          currentStreak={streakStatus.currentStreak}
+          urgencyLevel={streakStatus.warning.urgencyLevel}
+          onActionClick={() => setCurrentView('events')}
+        />
+      )}
 
       {/* Main Content */}
       <main className="pb-20 pt-4">

@@ -364,6 +364,13 @@ const formatTimeLeft = (expiryDate: Date): string => {
               <span className="text-sm ml-1">🔥</span>
             )}
           </div>
+          
+          {/* Streak Timer Warning */}
+          {stats.currentStreak > 0 && (
+            <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+              Place a bet daily to maintain streak
+            </div>
+          )}
         </div>
       </div>
 

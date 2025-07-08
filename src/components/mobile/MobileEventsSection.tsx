@@ -19,6 +19,7 @@ interface MobileEventsSectionProps {
   onEventSelect: (event: Event) => void;
   onCreateEvent: () => void;
   isAdmin: boolean;
+  streakStatus?: any;
 }
 
 export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
@@ -27,7 +28,8 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
   userBetsByEvent,
   onEventSelect,
   onCreateEvent,
-  isAdmin
+  isAdmin,
+  streakStatus
 }) => {
   const [eventsTab, setEventsTab] = useState<'active' | 'completed'>('active');
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +77,15 @@ export const MobileEventsSection: React.FC<MobileEventsSectionProps> = ({
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Events</h2>
           </div>
+          
+          {/* Streak Status Indicator */}
+          {streakStatus?.currentStreak > 0 && (
+            <div className="text-right">
+              <div className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                🔥 {streakStatus.currentStreak} day streak
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             {/* Search Icon */}
             <button
